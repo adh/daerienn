@@ -18,8 +18,14 @@ class Persistent(object, metaclass=PersistentMetaclass):
     
     def __setstate__(self, state):
         self.__dict__.update(state)
-        for k, v in self.__transient_attrs__:
-            if callablle(v):
+        self._init_transient_attrs()
+        
+    def _init_transient_attrs(self):
+        for k, v in self.__transient_attrs__.items():
+            if callable(v):
                 v = v()
             self.__dict__[k] = v
 
+    def __init__(self):
+        self._init_transient_attrs()
+        
