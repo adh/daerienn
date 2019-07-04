@@ -18,7 +18,4 @@ def index():
     if s.process_on_submit():
         s["label"].text = "Hello, {}".format(s["input"].value)
 
-    if s.is_xhr():
-        return s.handle_xhr()
-        
     return render_template("page.html", d=s)

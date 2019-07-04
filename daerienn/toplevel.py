@@ -89,6 +89,7 @@ class Session:
         return {"dae-session": self.dump()}
 
     def __html__(self):
+        self.handle_xhr()
         return self.toplevel.render(self.context)
 
     def process_on_submit(self):
@@ -111,7 +112,13 @@ class Session:
     def is_xhr(self):
         return "dae-xhr-trigger" in request.form
 
-    def handle_xhr(self):
+    def xhr_response(self):
         output = XHRResponse()
         self.toplevel.render_diff(output, self.context)
         return output.get()
+
+    def handle_xhr(self):
+        if self.is_xhr():
+            res = self.xhr_response()
+            abort(res)
+        
