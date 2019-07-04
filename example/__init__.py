@@ -1,7 +1,9 @@
 from flask import Flask, Blueprint, flash, render_template
-from daerienn import Session, StaticText, TopLevel
+from daerienn import Session, StaticText, TopLevel, Daerienn
 from daerienn.widgets import TextInput, Button
+
 app = Flask(__name__)
+Daerienn(app)
 
 class HelloWorld(TopLevel):
     def initialize_widgets(self):
@@ -15,5 +17,8 @@ def index():
     
     if s.process_on_submit():
         s["label"].text = "Hello, {}".format(s["input"].value)
+
+    if s.is_xhr():
+        return s.handle_xhr()
         
     return render_template("page.html", d=s)

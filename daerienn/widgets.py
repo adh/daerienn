@@ -109,7 +109,7 @@ class StaticText(Widget):
     text = property(get_text, set_text)    
 
     def __html__(self):
-        return escape(self._text)
+        return element("span", {"id": self.id}, self._text)
 
 
 class InputWidget(ValueWidget):
@@ -148,6 +148,7 @@ class Button(StaticText):
         return element("button",
                        {"type": "submit",
                         "id": self.id,
-                        "name": self.id},
+                        "name": self.id,
+                        "value": self.id},
                        self._text)
     

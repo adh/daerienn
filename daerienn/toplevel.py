@@ -1,10 +1,11 @@
-from flask import request, abort
+from flask import request, abort, jsonify
 from .widgets import Widget, ProcessingContext, WidgetList
 from markupsafe import Markup
 from .markup import element
 import pickle
 import base64
 import os
+import json
 
 class TopLevel(WidgetList):
     __transient_attrs__ = {
@@ -46,9 +47,24 @@ class TopLevel(WidgetList):
         return element('form',
                        {"id": self.id,
                         "method": "POST",
+                        "class": "dae-toplevel",
                         "content-type": "multipart/form-data"},
                        contents)
-        
+
+class XHRResponse:
+    def __init__(self):
+        self.contents = []
+
+    def get(self):
+        return jsonify(self.contents)
+
+    def replace_element(self, id, val):
+        self.contents.append({
+            "op": "replace",
+            "id": id,
+            "v": str(val)
+        })
+    
 class Session:
     def __init__(self, toplevel_constructor):
         if request.method == 'POST':
@@ -91,3 +107,11 @@ class Session:
 
     def __exit__(self, type=None, value=None, traceback=None):
         pass
+
+    def is_xhr(self):
+        return "dae-xhr-trigger" in request.form
+
+    def handle_xhr(self):
+        output = XHRResponse()
+        self.toplevel.render_diff(output, self.context)
+        return output.get()
