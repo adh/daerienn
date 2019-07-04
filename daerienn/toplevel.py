@@ -64,6 +64,13 @@ class XHRResponse:
             "id": id,
             "v": str(val)
         })
+
+    def redirect(self, url):
+        self.contents.append({
+            "op": "redirect",
+            "url": url
+        })
+        
     
 class Session:
     def __init__(self, toplevel_constructor):
@@ -122,3 +129,11 @@ class Session:
             res = self.xhr_response()
             abort(res)
         
+    def redirect(self, url):
+        if self.is_xhr():
+            output = XHRResponse()
+            output.redirect(url)
+            abort(output.get())
+        else:
+            redirect(url)
+

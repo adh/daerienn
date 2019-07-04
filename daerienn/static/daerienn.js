@@ -6,6 +6,11 @@ daerienn_commands["replace"] = function(cmd){
     document.getElementById(id).outerHTML = v;
 };
 
+daerienn_commands["redirect"] = function(cmd){
+    url = cmd["url"];
+    window.location = url;
+};
+
 (function (){
     function process_command(cmd){
 	daerienn_commands[cmd["op"]](cmd);
