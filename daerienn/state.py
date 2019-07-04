@@ -1,4 +1,7 @@
 import base64
+import os
+import pickle
+from flask import current_app
 
 class PersistentMetaclass(type):
     def __init__(self, *args):
@@ -28,4 +31,5 @@ class Persistent(object, metaclass=PersistentMetaclass):
 
     def __init__(self):
         self._init_transient_attrs()
+
         

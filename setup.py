@@ -17,6 +17,7 @@ setup(
     keywords="flask forms ajax spa",
     install_requires=[
         'Flask>=1.0',
+        'shortuuid'
     ],
     extras_require = {
         "example": [
