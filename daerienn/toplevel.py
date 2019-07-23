@@ -26,6 +26,10 @@ class TopLevel(WidgetList):
             return abort(400)
         super().process_request(data, context)
 
+    @property
+    def session_element_id(self):
+        return "{}-session".format(self.id)
+        
     def render(self, context):
         contents = []
         contents.append(
@@ -33,11 +37,10 @@ class TopLevel(WidgetList):
             .format("dae-form-instance", self.instance_id)
         )
         
-        for k,v in context.session.hidden_data.items():
-            contents.append(
-                Markup('<input type="hidden" name="{}" value="{}">')
-                .format(k, v)
-            )
+        contents.append(
+            Markup('<input type="hidden" name="dae-session" value="{}" id="{}">')
+            .format(context.session.session_data, self.session_element_id)
+        )
 
         for i in self.children:
             contents.append(i.render(context))
@@ -70,35 +73,56 @@ class XHRResponse:
             "op": "redirect",
             "url": url
         })
+
+    def set_value(self, id, value):
+        self.contents.append({
+            "op": "value",
+            "id": id,
+            "v": str(value)
+        })
+        
         
     
 class Session:
-    def __init__(self, toplevel_constructor):
+    def __init__(self, toplevel_constructor, session_provider=None):
+        if session_provider is None:
+            session_provider = DummySessionProvider()
+        self.session_provider = session_provider
+
+        self.session_id = None
+        
         if request.method == 'POST':
-            self.toplevel = self.reload_toplevel(request.form['dae-session'])
+            session = request.form['dae-session']
+            self.toplevel = self.reload_toplevel(session)
+            if session_provider.__persistent__:
+                self.session_id = session
         else:
             self.toplevel = toplevel_constructor()
 
         self.init_context()
             
     def reload_toplevel(self, data):
-        return pickle.loads(base64.b64decode(data.encode('ascii')))
+        return pickle.loads(self.session_provider.load(data))
 
     def init_context(self):
         self.context = ProcessingContext(toplevel=self.toplevel,
                                          session=self)
 
     def dump(self):
-        return base64.b64encode(pickle.dumps(self.toplevel)).decode('ascii')
+        return self.session_provider.store(pickle.dumps(self.toplevel, protocol=pickle.HIGHEST_PROTOCOL))
         
-    @property
-    def hidden_data(self):
-        return {"dae-session": self.dump()}
 
+    @property
+    def session_data(self):
+        return self.dump()
+    
     def __html__(self):
         self.handle_xhr()
         return self.toplevel.render(self.context)
 
+    def __call__(self):
+        return self.__html__()
+    
     def process_on_submit(self):
         if request.method == 'POST':
             self.toplevel.process_request(request.form, self.context)
@@ -122,6 +146,10 @@ class Session:
     def xhr_response(self):
         output = XHRResponse()
         self.toplevel.render_diff(output, self.context)
+        if not self.session_provider.__persistent__:
+            output.set_value(self.toplevel.session_element_id, self.dump())
+        else:
+            self.dump()
         return output.get()
 
     def handle_xhr(self):
@@ -137,3 +165,15 @@ class Session:
         else:
             redirect(url)
 
+class SessionProvider:
+    __persistent__ = False
+    def load(self, key):
+        raise NotImplemented
+    def store(self, data):
+        raise NotImplemented
+
+class DummySessionProvider(SessionProvider):
+    def load(self, key):
+        return base64.b64decode(key.encode('ascii'))
+    def store(self, data):
+        return base64.b64encode(data).decode('ascii')

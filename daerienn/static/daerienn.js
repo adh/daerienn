@@ -6,6 +6,13 @@ daerienn_commands["replace"] = function(cmd){
     document.getElementById(id).outerHTML = v;
 };
 
+daerienn_commands["value"] = function(cmd){
+    id = cmd["id"];
+    v = cmd["v"];
+    document.getElementById(id).value = v;
+};
+
+
 daerienn_commands["redirect"] = function(cmd){
     url = cmd["url"];
     window.location = url;
@@ -17,7 +24,6 @@ daerienn_commands["redirect"] = function(cmd){
     }
     
     function process_response(data){
-	console.log(data);
 	d = JSON.parse(data);
 	d.forEach(process_command)
     }
