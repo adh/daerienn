@@ -36,7 +36,6 @@ class Widget(Persistent):
         return "w"+shortuuid.uuid()
         
     def process_request(self, data, context):
-        print(self.id, data)
         if self.name:
             context.bind_widget(self.name, self)
         
@@ -52,8 +51,7 @@ class Widget(Persistent):
 
 class WidgetCollection(Widget):
     def process_request(self, data, context):
-        if self.name:
-            context.bind_widget(self.name, self)
+        super().process_request(data, context)
         for i in self.children:
             i.process_request(data, context)
             

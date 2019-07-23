@@ -1,10 +1,14 @@
 from flask import current_app, Blueprint, url_for
+from daerienn.toplevel import DummySessionProvider
 import time
 
 blueprint = Blueprint("daerienn", __name__)
 
 class Daerienn:
-    def __init__(self, app=None):
+    def __init__(self, app=None, session_provider=None):
+        if session_provider is None:
+            session_provider = DummySessionProvider
+        self.session_provider = session_provider
         self.app = app
         if app is not None:
             self.init_app(app)

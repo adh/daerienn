@@ -1,4 +1,4 @@
-from flask import request, abort, jsonify
+from flask import request, abort, jsonify, current_app
 from .widgets import Widget, ProcessingContext, WidgetList
 from markupsafe import Markup
 from .markup import element
@@ -86,7 +86,7 @@ class XHRResponse:
 class Session:
     def __init__(self, toplevel_constructor, session_provider=None):
         if session_provider is None:
-            session_provider = DummySessionProvider()
+            session_provider = current_app.extensions['daerienn'].session_provider
         self.session_provider = session_provider
 
         self.session_id = None
@@ -109,7 +109,9 @@ class Session:
                                          session=self)
 
     def dump(self):
-        return self.session_provider.store(pickle.dumps(self.toplevel, protocol=pickle.HIGHEST_PROTOCOL))
+        return self.session_provider.store(pickle.dumps(self.toplevel,
+                                                        protocol=pickle.HIGHEST_PROTOCOL),
+                                           session_id=self.session_id)
         
 
     @property
@@ -169,11 +171,12 @@ class SessionProvider:
     __persistent__ = False
     def load(self, key):
         raise NotImplemented
-    def store(self, data):
+    def store(self, data, session_id=None):
         raise NotImplemented
 
 class DummySessionProvider(SessionProvider):
     def load(self, key):
         return base64.b64decode(key.encode('ascii'))
-    def store(self, data):
+    def store(self, data, session_id=None):
         return base64.b64encode(data).decode('ascii')
+
