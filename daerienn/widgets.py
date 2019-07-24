@@ -4,6 +4,7 @@ import os
 from markupsafe import Markup, escape
 import shortuuid
 from .markup import element, xmltag
+from flask import render_template
 
 class ProcessingContext:
     def __init__(self, session=None, toplevel=None, binding_map=None):
@@ -69,12 +70,16 @@ class WidgetCollection(Widget):
 class WidgetList(WidgetCollection):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.children = []
+        self._children = []
         
     def append(self, widget):
-        self.children.append(widget)
+        self._children.append(widget)
         self.dirty = True
 
+    @property
+    def children(self):
+        return self._children
+    
     def render(self, context):
         return Markup('').join(i.render(context) for i in self.children)
 
@@ -149,4 +154,25 @@ class Button(StaticText):
                         "name": self.id,
                         "value": self.id},
                        self._text)
+
+class RenderAdapter:
+    def __init__(self, obj, context):
+        self.obj = obj
+        self.context = context
+    def __getattr__(self, key):
+        v = getattr(obj, key)
+        return v.render(self.context)
     
+class JinjaWidget(WidgetCollection):
+    def __init__(self, value=None, **kwargs):
+        super().__init__(**kwargs)
+
+    def render(self, context):
+        print("manau")
+        return Markup(render_template(self.__template_name__,
+                                      w=self,
+                                      r=RenderAdapter(self, context)))
+
+    @property
+    def children(self):
+        return [i for i in self.__dict__.values() if isinstance(i, Widget)]

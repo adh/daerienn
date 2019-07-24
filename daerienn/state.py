@@ -26,7 +26,7 @@ class Persistent(object, metaclass=PersistentMetaclass):
     def _init_transient_attrs(self):
         for k, v in self.__transient_attrs__.items():
             if callable(v):
-                v = v()
+                v = v(self)
             self.__dict__[k] = v
 
     def __init__(self):

@@ -7,7 +7,7 @@ import base64
 import os
 import json
 
-class TopLevel(WidgetList):
+class TopLevel(Widget):
     __transient_attrs__ = {
         "fragment": None,
         "event_trigger": None,
@@ -42,8 +42,7 @@ class TopLevel(WidgetList):
             .format(context.session.session_data, self.session_element_id)
         )
 
-        for i in self.children:
-            contents.append(i.render(context))
+        contents.append(super().render(context))
             
         contents = Markup('').join(contents)
         
@@ -53,6 +52,8 @@ class TopLevel(WidgetList):
                         "class": "dae-toplevel",
                         "content-type": "multipart/form-data"},
                        contents)
+
+        
 
 class XHRResponse:
     def __init__(self):
