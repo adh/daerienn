@@ -1,8 +1,14 @@
 from flask import current_app, Blueprint, url_for
 from daerienn.toplevel import DummySessionProvider
 import time
+import os
 
 blueprint = Blueprint("daerienn", __name__)
+
+import pkg_resources
+def res(f):
+    return pkg_resources.resource_filename(pkg_resources.Requirement.parse('daerienn'), "daerienn/" + f)
+
 
 class Daerienn:
     def __init__(self, app=None, session_provider=None):
@@ -27,5 +33,9 @@ class Daerienn:
 
         @app.context_processor
         def daerienn_js_url():
+            f = res('static/daerienn.js')
+            
             return {"daerienn_js_url":
-                    url_for("daerienn.static", filename="daerienn.js")+"?"+str(time.time())}
+                    url_for("daerienn.static",
+                            filename="daerienn.js",
+                            v=int(os.stat(f).st_mtime))}
