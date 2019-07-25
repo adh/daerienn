@@ -2,10 +2,8 @@ from flask import current_app, Blueprint, url_for
 from daerienn.toplevel import DummySessionProvider
 import time
 import os
-
-blueprint = Blueprint("daerienn", __name__)
-
 import pkg_resources
+
 def res(f):
     return pkg_resources.resource_filename(pkg_resources.Requirement.parse('daerienn'), "daerienn/" + f)
 
